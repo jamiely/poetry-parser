@@ -10,6 +10,6 @@ main = do
   poem <- getContents
   -- echo the poem and its type
   putStrLn $ "Poem: \n" ++ poem
-  putStrLn $ "Type: " ++ classify poem
+  putStrLn $ "Type: " ++ classify poem "dictionary"
 
 

@@ -7,20 +7,31 @@ import PoemParser
 import Data.List (isSuffixOf)
 import Test.HUnit
 
--- | Use to classify a poem. Given a poem, this will output information
+-- | Use to classify a poem. Given a poem, and dictionary, this will output information
 -- about its type, rhyming scheme, and meter.
-classify :: String -> String
-classify _ = "Rhyming poem aa"
+classify :: String -> String -> String
+classify _ _ = error "not implemented"
+
+testClassify :: Test 
+testClassify = "Test classify" ~: TestList [
+  -- fails right now
+  classify "something something fox\nsomething something pox" "SOMETHING  S AH1 M TH IH0 NG\nFOX  F AA1 K S\nPOX  P AA1 K S" ~?= "Rhyming poem aa"
+  ]
 
 type Phoneme = String
 
 data Word =
     Word String Int String [Phoneme] -- actual word, syllables, stress, phonemes
+    deriving (Eq, Show)
 
 -- | Given a list of tokens, returns an analysis of the poem pieces
--- including breaks
-analyze :: [Token] -> [Word]
-analyze _ = testWords
+analyze :: [Token] -> [[Word]]
+analyze _ = error "not implemented"
+
+testAnalyze :: Test
+testAnalyze = "Test analyze" ~: TestList [
+  "fox" ~: analyze [TokWord "fox"] ~?= [[testWordFox]]
+  ]
 
 testWords :: [Word]
 testWords = [testWordFox, testWordPox]
@@ -108,6 +119,8 @@ test = do
     testSyllables,
     testStresses,
     testStressPattern,
-    testIsStressPhoneme
+    testIsStressPhoneme,
+    testAnalyze,
+    testClassify
     ])
   return ()

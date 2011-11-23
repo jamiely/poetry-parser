@@ -1,8 +1,9 @@
-module PoemParser(Token, PoemParser.lex) where
+module PoemParser(Token (TokWord, TokNewline), PoemParser.lex) where
 
 data Token =
     TokWord String -- a word
   | TokNewline -- a newline character
+  deriving Eq
 
 -- Lexes a string into a list of tokens
 lex :: String -> [Token]
