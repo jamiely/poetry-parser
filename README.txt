@@ -20,3 +20,15 @@ Run the following command:
 
     make dictionary
 
+# Building
+
+    make clean
+    make
+
+# Running Tests
+
+In ghci:
+
+    :l PoemClassifier
+    PoemClassifier.test
+
