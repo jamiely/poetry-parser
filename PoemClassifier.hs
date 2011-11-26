@@ -1,5 +1,5 @@
 module PoemClassifier (
-  classify, analyze, rhymes, 
+  classify, getWords, rhymes, 
   PoemClassifier.test, Dictionary) where
 
 import CMUPronouncingDictionary
@@ -13,7 +13,23 @@ import Data.Maybe
 -- | Use to classify a poem. Given a poem, and dictionary, this will output information
 -- about its type, rhyming scheme, and meter.
 classify :: String -> String -> String
-classify _ _ = error "not implemented"
+classify poem dictText = poemDescription where
+  dict = loadWords dictText $ wordList poem
+  words = justWords $ getWords (lines poem) dict
+  poemDescription = analyze words
+
+-- | Returns a description of the poem
+analyze :: [[Word]] -> String
+analyze _ = error "unimplemented"
+
+testAnalyze :: Test
+testAnalyze = "Test analyze" ~: TestList [
+  analyze [[testWordFox],[testWordPox]] ~?= "Rhyming poem: aa"
+  ]
+
+-- | Given a String, splits string on spaces, removing empty strings
+wordList :: String -> [String]
+wordList text = filter (/= "") $ splitOn " " text
 
 testClassify :: Test 
 testClassify = "Test classify" ~: TestList [
@@ -28,27 +44,27 @@ testDictionary = Map.fromList [
   ]
 
 -- | Given a list of tokens, returns an analysis of the poem pieces
-analyze :: [String] -> Dictionary -> [[Maybe Word]]
-analyze strs dict = map (map (getWord dict)) broken where
+getWords :: [String] -> Dictionary -> [[Maybe Word]]
+getWords strs dict = map (map (getWord dict)) broken where
   broken = splitOn ["\n"] strs
 
-testAnalyze :: Test
-testAnalyze = "Test analyze" ~: TestList [
-  "fox" ~: analyze ["fox"] testDictionary ~?= [[justFox]],
-  "fox with breaks" ~: analyze ["fox", "\n", "fox", "fox"] testDictionary ~?= 
+testGetWords :: Test
+testGetWords = "Test getWords" ~: TestList [
+  "fox" ~: getWords ["fox"] testDictionary ~?= [[justFox]],
+  "fox with breaks" ~: getWords ["fox", "\n", "fox", "fox"] testDictionary ~?= 
     [[justFox], [justFox, justFox]]
   ] where
   justFox = Just testWordFox
 
 -- | Removes all Nothing's from the list and collapses entries
-analyzeDiscard :: [[Maybe Word]] -> [[Word]]
-analyzeDiscard w = filter (not . null) (map onlyWords w) where
+justWords :: [[Maybe Word]] -> [[Word]]
+justWords w = filter (not . null) (map onlyWords w) where
   onlyWords :: [Maybe Word] -> [Word]
   onlyWords maybeWords = map fromJust (filter isJust maybeWords)
 
-testAnalyzeDiscard :: Test
-testAnalyzeDiscard = "Test analyzeDiscard" ~: TestList [
-  analyzeDiscard [[Just testWordFox, Nothing], [Nothing, Nothing]] ~?= 
+testJustWords :: Test
+testJustWords = "Test justWords" ~: TestList [
+  justWords [[Just testWordFox, Nothing], [Nothing, Nothing]] ~?= 
     [[testWordFox]]
   ]
 
@@ -85,7 +101,8 @@ test = do
   runTestTT (TestList [
     testRhymes,
     testGetWord,
-    testAnalyzeDiscard,
+    testJustWords,
+    testGetWords,
     testAnalyze,
     testClassify
     ])
