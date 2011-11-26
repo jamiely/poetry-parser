@@ -1,11 +1,15 @@
 module PoemClassifier (
   classify, analyze, rhymes, 
   syllables, stresses, Word, 
-  PoemClassifier.test) where
+  PoemClassifier.test, Dictionary) where
 
 import PoemParser
 import Data.List (isSuffixOf)
 import Test.HUnit
+import Data.Map (Map)
+import qualified Data.Map as Map
+import Data.List.Split(splitOn)
+import Data.Maybe
 
 -- | Use to classify a poem. Given a poem, and dictionary, this will output information
 -- about its type, rhyming scheme, and meter.
@@ -24,13 +28,49 @@ data Word =
     Word String Int String [Phoneme] -- actual word, syllables, stress, phonemes
     deriving (Eq, Show)
 
+type PoemWords = [[Word]]
+
+type Dictionary = Map String Word
+
+testDictionary :: Dictionary
+testDictionary = Map.fromList [
+  ("fox", testWordFox), 
+  ("pox", testWordPox)
+  ]
+
 -- | Given a list of tokens, returns an analysis of the poem pieces
-analyze :: [Token] -> [[Word]]
-analyze _ = error "not implemented"
+analyze :: [String] -> Dictionary -> [[Maybe Word]]
+analyze strs dict = map (map (getWord dict)) broken where
+  broken = splitOn ["\n"] strs
 
 testAnalyze :: Test
 testAnalyze = "Test analyze" ~: TestList [
-  "fox" ~: analyze [TokWord "fox"] ~?= [[testWordFox]]
+  "fox" ~: analyze ["fox"] testDictionary ~?= [[justFox]],
+  "fox with breaks" ~: analyze ["fox", "\n", "fox", "fox"] testDictionary ~?= 
+    [[justFox], [justFox, justFox]]
+  ] where
+  justFox = Just testWordFox
+
+-- | Removes all Nothing's from the list and collapses entries
+analyzeDiscard :: [[Maybe Word]] -> [[Word]]
+analyzeDiscard w = filter (not . null) (map onlyWords w) where
+  onlyWords :: [Maybe Word] -> [Word]
+  onlyWords maybeWords = map fromJust (filter isJust maybeWords)
+
+testAnalyzeDiscard :: Test
+testAnalyzeDiscard = "Test analyzeDiscard" ~: TestList [
+  analyzeDiscard [[Just testWordFox, Nothing], [Nothing, Nothing]] ~?= 
+    [[testWordFox]]
+  ]
+
+-- | Returns statistics about a word given the word
+getWord :: Dictionary -> String -> Maybe Word
+getWord dict str = Map.lookup str dict
+
+testGetWord :: Test
+testGetWord = "Test getWord" ~: TestList [
+  "just" ~: getWord testDictionary "fox" ~?= Just testWordFox,
+  "nothing" ~: getWord testDictionary "nothing" ~?= Nothing
   ]
 
 testWords :: [Word]
@@ -120,6 +160,8 @@ test = do
     testStresses,
     testStressPattern,
     testIsStressPhoneme,
+    testGetWord,
+    testAnalyzeDiscard,
     testAnalyze,
     testClassify
     ])
