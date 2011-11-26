@@ -3,6 +3,7 @@ module PoemClassifier (
   PoemClassifier.test) where
 
 import CMUPronouncingDictionary
+import PoemAnalyzer
 import PoemParser
 import Test.HUnit
 import Data.List.Split(splitOn)
@@ -29,6 +30,7 @@ testAnalyze :: Test
 testAnalyze = "Test analyze" ~: TestList [
   analyze [[testWordFox],[testWordPox]] ~?= "Rhyming poem: aa"
   ]
+
 
 -- | Use to determine if two words rhyme. Compares the last 3 phonemes
 -- of each word to determine if they rhyme.
