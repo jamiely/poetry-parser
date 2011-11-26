@@ -30,10 +30,6 @@ testAnalyze = "Test analyze" ~: TestList [
   analyze [[testWordFox],[testWordPox]] ~?= "Rhyming poem: aa"
   ]
 
--- | Given a String, splits string on spaces, removing empty strings
-wordList :: String -> [String]
-wordList text = filter (/= "") $ splitOn " " text
-
 -- | Use to determine if two words rhyme. Compares the last 3 phonemes
 -- of each word to determine if they rhyme.
 rhymes :: Word -> Word -> Bool

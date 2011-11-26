@@ -1,6 +1,6 @@
 module PoemParser(
   Token (TokWord, TokNewline), PoemParser.lex,
-  getWords, justWords) where
+  getWords, justWords, wordList) where
 
 import CMUPronouncingDictionary
 import Test.HUnit
@@ -19,6 +19,10 @@ lex :: String -> [Token]
 lex _ = [something, something, TokWord "fox", TokNewline, 
          something, something, TokWord "pox"] where
   something = TokWord "something"
+
+-- | Given a String, splits string on spaces, removing empty strings
+wordList :: String -> [String]
+wordList text = filter (/= "") $ splitOn " " text
 
 -- | Given a list of tokens, returns an analysis of the poem pieces
 getWords :: [String] -> Dictionary -> [[Maybe Word]]
