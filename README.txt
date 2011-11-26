@@ -32,3 +32,6 @@ In ghci:
     :l PoemClassifier
     PoemClassifier.test
 
+    :l PoemAnalyzer
+    PoemAnalyzer.test
+

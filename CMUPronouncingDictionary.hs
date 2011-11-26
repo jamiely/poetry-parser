@@ -1,9 +1,10 @@
 module CMUPronouncingDictionary (
-  Phoneme, Word(Word), PoemWords, Dictionary,
+  Phoneme, Word(Word), PoemLine, Dictionary,
   loadWords,
   testWordTransfusion, testWordPox,
   testWordVision, testWordFox,
-  CMUPronouncingDictionary.test
+  CMUPronouncingDictionary.test,
+  syllables
 ) where
 
 import Data.Char(toLower,toUpper)
@@ -19,7 +20,7 @@ data Word =
     Word String Int String [Phoneme] -- actual word, syllables, stress, phonemes
     deriving (Eq, Show)
 
-type PoemWords = [[Word]]
+type PoemLine = [Word]
 
 type Dictionary = Map String Word
 
@@ -82,7 +83,7 @@ testCorpus = "FOX  F AA1 K S"
 
 -- | Use to determine the number of syllables in a word
 syllables :: Word -> Int
-syllables = length . stresses 
+syllables (Word _ syl _ _ ) = syl
 
 testSyllables :: Test
 testSyllables = "Test syllables" ~: TestList [
