@@ -4,7 +4,7 @@ module CMUPronouncingDictionary (
   testWordTransfusion, testWordPox,
   testWordVision, testWordFox,
   CMUPronouncingDictionary.test,
-  syllables
+  syllables, phonemes
 ) where
 
 import Data.Char(toLower,toUpper)
@@ -84,6 +84,10 @@ testCorpus = "FOX  F AA1 K S"
 -- | Use to determine the number of syllables in a word
 syllables :: Word -> Int
 syllables (Word _ syl _ _ ) = syl
+
+-- | Use to retrieve the phonemes associated with a word
+phonemes :: Word -> [Phoneme]
+phonemes (Word _ _ _ p) = p
 
 testSyllables :: Test
 testSyllables = "Test syllables" ~: TestList [

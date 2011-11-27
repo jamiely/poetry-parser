@@ -32,24 +32,10 @@ testAnalyze = "Test analyze" ~: TestList [
   ]
 
 
--- | Use to determine if two words rhyme. Compares the last 3 phonemes
--- of each word to determine if they rhyme.
-rhymes :: Word -> Word -> Bool
-rhymes (Word _ _ _ ph1) (Word _ _ _ ph2) = part ph1 == part ph2 where
-  part = (take 3) . reverse
-
-testRhymes :: Test
-testRhymes = "Test Rhymes" ~: TestList [
-  "-zion" ~: rhymes testWordTransfusion testWordVision ~?= True,
-  "-ox" ~: rhymes testWordFox testWordPox ~?= True,
-  "doesn't rhyme" ~: rhymes testWordPox testWordVision ~?= False
-  ] where
-
 
 test :: IO ()
 test = do
   runTestTT (TestList [
-    testRhymes,
     testAnalyze,
     testClassify
     ])
