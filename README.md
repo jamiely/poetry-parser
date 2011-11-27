@@ -25,6 +25,10 @@ Run the following command:
     make clean
     make
 
+# Running main
+
+    ./Main < poem1.txt
+
 # Running Tests
 
 In ghci:
