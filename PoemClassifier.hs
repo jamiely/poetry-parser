@@ -6,7 +6,6 @@ import CMUPronouncingDictionary
 import PoemAnalyzer
 import PoemParser
 import Test.HUnit
-import Data.List.Split(splitOn)
 
 -- | Use to classify a poem. Given a poem, and dictionary, this will output information
 -- about its type, rhyming scheme, and meter.
@@ -24,7 +23,8 @@ testClassify = "Test classify" ~: TestList [
 
 -- | Returns a description of the poem
 analyze :: [[Word]] -> String
-analyze _ = error "unimplemented"
+-- Tokenize the words, and parse using one of the available parsers
+analyze _ = error "analyze unimplemented"
 
 testAnalyze :: Test
 testAnalyze = "Test analyze" ~: TestList [

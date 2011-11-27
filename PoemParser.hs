@@ -13,11 +13,16 @@ data Token =
 
 -- Lexes a string into a list of tokens
 lex :: [PoemLine] -> [Token]
-lex _ = error "unimplemented"
+lex = foldr foldLines [] where
+  foldLines :: PoemLine -> [Token] -> [Token]
+  foldLines ln toks = (foldr foldLine toks ln) ++ [TokNewline]
+  foldLine :: Word -> [Token] -> [Token]
+  foldLine w toks = (TokWord w):toks
 
 testLex :: Test
 testLex = TestList [
-  True ~?= False
+  PoemParser.lex [[testWordFox, testWordPox], [testWordVision, testWordTransfusion]] ~?= 
+    [TokWord testWordFox, TokWord testWordPox, TokNewline, TokWord testWordVision, TokWord testWordTransfusion] 
   ]
 
 type RhymeStats = ([Phoneme], String)
