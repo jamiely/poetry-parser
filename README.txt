@@ -35,3 +35,16 @@ In ghci:
     :l PoemAnalyzer
     PoemAnalyzer.test
 
+# Flow of Program
+
+1. Read poem from STDIN
+2. Separate poem into words, normalize for dictionary lookup
+3. Build dictionary from `cmudict.0.7a` file
+4. Submit original poem and dictionary to classifier
+5. Process the poem into `Word` types, containing extended information
+6. Tokenize the `Word` lists
+7. Parse the tokens using the extended `Word` information
+8. Apply one of the parsers (rhymingPoem, haiku, limerick, sonnet) to classify the poem type
+9. Retrieve a RhymeMap to characterize the rhyming scheme of the poem
+
+
