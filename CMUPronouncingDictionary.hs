@@ -3,7 +3,7 @@ module CMUPronouncingDictionary (
   loadWords,
   testWordTransfusion, testWordPox,
   testWordVision, testWordFox,
-  CMUPronouncingDictionary.test,
+  CMUPronouncingDictionary.dictTest,
   syllables, phonemes
 ) where
 
@@ -107,7 +107,7 @@ stressPattern (p:ps) = pat ++ stressPattern ps where
     '2' -> "^"
     '0' -> "_"
     _   -> ""
-  lst = head $ reverse p -- @todo, bug here
+  lst = last p -- @todo, bug here
 
 testStressPattern :: Test
 testStressPattern = "Test stressPattern" ~: TestList [
@@ -135,8 +135,8 @@ testIsStressPhoneme = "Test isStressPhoneme" ~: TestList [
   isStressPhoneme "VERYLONG1" ~?= True
   ]
 
-test :: IO ()
-test = do
+dictTest :: IO ()
+dictTest = do
   runTestTT ( TestList [
     testSyllables,
     testStresses,

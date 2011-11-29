@@ -56,8 +56,8 @@ testWords :: [Word]
 testWords = [testWordFox, testWordPox]
 
 
-test :: IO ()
-test = do
+analyzeTest :: IO ()
+analyzeTest = do
   runTestTT (TestList [
     testGetWord,
     testJustWords,

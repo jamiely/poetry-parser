@@ -27,7 +27,7 @@ testSmallPoem = "something something fox\n" ++
 
 
 -- | Given a dictionary filename, and list of words, excerpts of the dictionary
--- will be returned corresponding to the list of wrds
+-- will be returned corresponding to the list of words
 loadDictionary :: String -> Handle -> [String] -> String -> IO ()
 loadDictionary poem inh wrds excerpt = do
   ineof <- hIsEOF inh
