@@ -1,20 +1,15 @@
-module PoemAnalyzer(getWords, justWords, wordList) where
+module PoemAnalyzer(getWords, justWords) where
 
 import CMUPronouncingDictionary
 import Test.HUnit
 import Data.Map (Map)
+import Data.Char (toLower)
 import qualified Data.Map as Map
-import Data.List.Split(splitOn)
 import Data.Maybe
-
--- | Given a String, splits string on spaces, removing empty strings
-wordList :: String -> [String]
-wordList text = filter (/= "") $ splitOn " " text
 
 -- | Given a list of tokens, returns an analysis of the poem pieces
 getWords :: [String] -> Dictionary -> [[Maybe Word]]
-getWords strs dict = map (map (getWord dict)) broken where
-  broken = splitOn ["\n"] strs
+getWords strs dict = map (map (getWord dict)) (map words strs) where
 
 testGetWords :: Test
 testGetWords = "Test getWords" ~: TestList [
@@ -44,7 +39,7 @@ testJustWords = "Test justWords" ~: TestList [
 
 -- | Returns statistics about a word given the word
 getWord :: Dictionary -> String -> Maybe Word
-getWord dict str = Map.lookup str dict
+getWord dict str = Map.lookup (map toLower str) dict
 
 testGetWord :: Test
 testGetWord = "Test getWord" ~: TestList [

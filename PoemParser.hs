@@ -1,4 +1,5 @@
-module PoemParser(Token (TokWord, TokNewline), PoemParser.lex) where
+module PoemParser(Token (TokWord, TokNewline), PoemParser.lex, haiku,
+ PoemParser, RhymeMap, doParse) where
 
 import Test.HUnit
 import PoemAnalyzer
@@ -13,16 +14,16 @@ data Token =
 
 -- Lexes a string into a list of tokens
 lex :: [PoemLine] -> [Token]
-lex = foldr foldLines [] where
-  foldLines :: PoemLine -> [Token] -> [Token]
-  foldLines ln toks = (foldr foldLine toks ln) ++ [TokNewline]
+lex = concatMap (fun1 . fun2) where
+  fun1 = \l -> l ++ [TokNewline]
+  fun2 = (foldr foldLine [])
   foldLine :: Word -> [Token] -> [Token]
   foldLine w toks = (TokWord w):toks
 
 testLex :: Test
 testLex = TestList [
   PoemParser.lex [[testWordFox, testWordPox], [testWordVision, testWordTransfusion]] ~?= 
-    [TokWord testWordFox, TokWord testWordPox, TokNewline, TokWord testWordVision, TokWord testWordTransfusion] 
+    [TokWord testWordFox, TokWord testWordPox, TokNewline, TokWord testWordVision, TokWord testWordTransfusion, TokNewline] 
   ]
 
 type RhymeStats = ([Phoneme], String)
@@ -34,6 +35,9 @@ newtype PoemParser a = P ([Token] -> [(a, [Token])])
 doParse :: PoemParser a -> [Token] -> [(a, [Token])]
 doParse (P p) pls = p pls
 
+
+-- | If the first item in the input stream is the last word
+-- on a line, parses a rhyme map from that word.
 lastWord :: PoemParser RhymeMap
 lastWord = P fun where
   fun ((TokWord w):TokNewline:vs) = [(map, vs)] where
@@ -89,6 +93,8 @@ testRhymes = "Test Rhymes" ~: TestList [
   "doesn't rhyme" ~: rhymes testWordPox testWordVision ~?= False
   ] 
 
+-- | Takes a RhymeMap and gives a parser which consumes input
+-- that rhymes with something in that map.
 rhymeIn :: RhymeMap -> PoemParser RhymeMap 
 rhymeIn map = P fun where
   -- @todo This may need to be modified so that the map is agumented.

@@ -48,7 +48,7 @@ dictLineToWord :: String -> Word
 dictLineToWord line = Word strWord syllableCount stress phonemes where
   -- filter out all empty parts (can occur because there are two spaces
   -- after the word in a dictionary line)
-  lineParts = filter (/= "") $ splitOn " " line
+  lineParts = words line 
   -- @todo, potential for error here
   strWord = map toLower $ head lineParts
   phonemes = tail lineParts

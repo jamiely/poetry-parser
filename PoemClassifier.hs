@@ -7,13 +7,13 @@ import PoemAnalyzer
 import PoemParser
 import Test.HUnit
 
--- | Use to classify a poem. Given a poem, and dictionary, this will output information
--- about its type, rhyming scheme, and meter.
+-- | Use to classify a poem. Given a poem, and dictionary, 
+-- this will output information about its type, rhyming scheme, and meter.
 classify :: String -> String -> String
 classify poem dictText = poemDescription where
-  dict = loadWords dictText $ wordList poem
-  words = justWords $ getWords (lines poem) dict
-  poemDescription = analyze words
+  dict = loadWords dictText $ words poem
+  res = justWords $ getWords (lines poem) dict
+  poemDescription = analyze res
 
 testClassify :: Test 
 testClassify = "Test classify" ~: TestList [
@@ -22,16 +22,20 @@ testClassify = "Test classify" ~: TestList [
   ]
 
 -- | Returns a description of the poem
-analyze :: [[Word]] -> String
+analyze :: [PoemLine] -> String
 -- Tokenize the words, and parse using one of the available parsers
-analyze _ = error "analyze unimplemented"
+analyze poem = let toks = PoemParser.lex poem in
+  case doParse haiku toks of
+    [_] -> "haiku"
+    []               -> "unsupported form, or junk" 
 
 testAnalyze :: Test
 testAnalyze = "Test analyze" ~: TestList [
   analyze [[testWordFox],[testWordPox]] ~?= "Rhyming poem: aa"
   ]
 
-
+supportedParsers :: [PoemParser RhymeMap]
+supportedParsers = [haiku]
 
 test :: IO ()
 test = do

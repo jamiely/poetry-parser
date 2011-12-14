@@ -7,7 +7,7 @@ Main:
 	ghc --make -optl"-Wl,-read_only_relocs,suppress,-no_compact_unwind" Main
 
 clean:
-	rm Main
+	rm Main *.hi *.o
 
 dictionary:
 	curl -OL https://cmusphinx.svn.sourceforge.net/svnroot/cmusphinx/trunk/cmudict/cmudict.0.7a
