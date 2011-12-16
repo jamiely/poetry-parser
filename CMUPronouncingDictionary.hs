@@ -46,8 +46,7 @@ testLoadWords = "Test loadWords" ~: TestList[
 
 dictLineToWord :: String -> Word
 dictLineToWord line = Word strWord syllableCount stress phonemes where
-  lineParts = words line 
-  (strWord, phonemes) = case lineParts of 
+  (strWord, phonemes) = case (words line) of 
     [] -> ("", [])
     (x:xs) -> (x, xs)
   stress = stressPattern phonemes
@@ -105,7 +104,7 @@ stressPattern (p:ps) = pat ++ stressPattern ps where
     '2' -> "^"
     '0' -> "_"
     _   -> ""
-  lst = last p -- @todo, bug here
+  lst = if null pat then '\0' else last pat
 
 testStressPattern :: Test
 testStressPattern = "Test stressPattern" ~: TestList [
