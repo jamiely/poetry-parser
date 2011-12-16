@@ -46,12 +46,10 @@ testLoadWords = "Test loadWords" ~: TestList[
 
 dictLineToWord :: String -> Word
 dictLineToWord line = Word strWord syllableCount stress phonemes where
-  -- filter out all empty parts (can occur because there are two spaces
-  -- after the word in a dictionary line)
   lineParts = words line 
-  -- @todo, potential for error here
-  strWord = map toLower $ head lineParts
-  phonemes = tail lineParts
+  (strWord, phonemes) = case lineParts of 
+    [] -> ("", [])
+    (x:xs) -> (x, xs)
   stress = stressPattern phonemes
   stressPhonemes = filter isStressPhoneme phonemes
   syllableCount = length stressPhonemes 
