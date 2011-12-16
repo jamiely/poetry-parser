@@ -7,6 +7,7 @@ import CMUPronouncingDictionary
 import Data.Map (Map)
 import qualified Data.Map as Map
 import Data.Char (isAlpha)
+import Control.Monad.State
 
 data Token =
     TokWord Word -- a word
@@ -33,32 +34,46 @@ type RhymeMap = Map String RhymeStats
 
 newtype PoemParser a = P ([Token] -> [(a, [Token])])
 
+type SPP a = StateT a PoemParser a
+
 doParse :: PoemParser a -> [Token] -> [(a, [Token])]
 doParse (P p) pls = p pls
 
 
 -- | If the first item in the input stream is the last word
 -- on a line, parses a rhyme map from that word.
-lastWord :: PoemParser RhymeMap
-lastWord = P fun where
-  fun ((TokWord w):TokNewline:vs) = [(map, vs)] where
-    -- the rhyming scheme should be assigned using a previous map,
+lastWord :: RhymeMap -> PoemParser RhymeMap
+lastWord mp = P fun where
+  fun ((TokWord w):TokNewline:vs) = [(mp', vs)] where
+    -- the rhyming scheme should be assigned using a previous mp,
     -- using keys that don't exist
-    map = Map.fromList [("a", (phonemes w, "a"))]
+    keyz = map fst $ Map.elems mp
+    nk = nextKey keyz
+    mp' = if any (phonemesMatch 3 (phonemes w)) keyz 
+           then mp
+           else Map.insert nk (phonemes w, nk) mp
   fun _ = []
+   -- todo: runtime error
+  nextKey ks = head $ drop (length ks) (toString abcs)
+  
+  toString :: String -> [String]
+  toString = foldr  (\c cs -> [c] : cs) []
+  
+  --Hoping for not more than 26 phonemes now...
+  abcs = "abcdefghijklmnopqrstuvwxyz"
 
 testLastWord :: Test
 testLastWord = "Test lastWord" ~: TestList [
-  doParse lastWord tokList ~?= [(map, [])]
+  doParse (lastWord Map.empty) tokList ~?= [(map, [])]
   ] where
   tokList = [TokWord testWordFox, TokNewline]
   map = Map.fromList [("a", (["F", "AA1", "K", "S"], "a"))]
  
 -- | Returns true if the last n phonemes in the passed lists match
 phonemesMatch :: Int -> [Phoneme] -> [Phoneme] -> Bool
-phonemesMatch n a b = fun (part a) == fun (part b) where
+phonemesMatch n a b = lettersOnly (part a) == lettersOnly (part b) where
   part = (take n) . reverse
-  fun = map (filter isAlpha)
+  lettersOnly = map (filter isAlpha)
 
 testPhonemesMatch :: Test
 testPhonemesMatch = "Test phonemesMatch" ~: TestList [
