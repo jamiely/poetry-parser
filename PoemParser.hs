@@ -6,6 +6,7 @@ import PoemAnalyzer
 import CMUPronouncingDictionary
 import Data.Map (Map)
 import qualified Data.Map as Map
+import Data.Char (isAlpha)
 
 data Token =
     TokWord Word -- a word
@@ -55,8 +56,9 @@ testLastWord = "Test lastWord" ~: TestList [
  
 -- | Returns true if the last n phonemes in the passed lists match
 phonemesMatch :: Int -> [Phoneme] -> [Phoneme] -> Bool
-phonemesMatch n a b = part a == part b where
+phonemesMatch n a b = fun (part a) == fun (part b) where
   part = (take n) . reverse
+  fun = map (filter isAlpha)
 
 testPhonemesMatch :: Test
 testPhonemesMatch = "Test phonemesMatch" ~: TestList [
