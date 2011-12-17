@@ -21,28 +21,30 @@ import Test.HUnit
 type Phoneme = String
 
 data Word =
-    Word String Int String [Phoneme] -- actual word, syllables, stress, phonemes
+    Word String Int [Stress] [Phoneme] -- actual word, syllables, stress, phonemes
     deriving (Eq, Show)
 
 data Line = Line {
                   lwords :: [String]
                  ,lsyllables :: Int
-                 ,lstress ::  String
+                 ,lstress ::  [Stress]
                  ,lphonemes :: [Phoneme]} 
     deriving (Eq, Show)
 
-
 type PoemLine = [Word]
+
+data Stress = U | D
+    deriving (Eq, Show)
 
 type Dictionary = Map String Word
 
 -- | Converts a list of Words into a Line containing those words.
-wordsToLine :: [Word] -> Line
+wordsToLine :: PoemLine -> Line
 wordsToLine ws = Line words totalSyllables totalStress allPhons where
   words = map wordOnly ws where
     wordOnly (Word w _ _ _ ) = w
   totalSyllables = foldr (\w n -> (syllables w) + n) 0 ws
-  totalStress = foldr(\w sts -> ((stressPattern (phonemes w)) ++ sts)) "" ws
+  totalStress = foldr(\w sts -> ((stressPattern (phonemes w)) ++ sts)) [] ws
   allPhons = concatMap phonemes ws
 
 -- | Converts a Word into a Line containing only that word
@@ -90,32 +92,33 @@ testDictLineToWord = "Test dictLineToWord" ~: TestList [
   ]
 
 testWordFox :: Word
-testWordFox = Word "fox" 1 "^" ["F", "AA1", "K", "S"]
+testWordFox = Word "fox" 1 [U] ["F", "AA1", "K", "S"]
 
 testWordPox :: Word
-testWordPox = Word "pox" 1 "^" ["P", "AA1", "K", "S"]
+testWordPox = Word "pox" 1 [U] ["P", "AA1", "K", "S"]
 
 testWordVision :: Word
-testWordVision = Word "vision" 2 "^_" ["V", "IH1", "ZH", "AH0", "N"]
+testWordVision = Word "vision" 2 [U, D] ["V", "IH1", "ZH", "AH0", "N"]
 
 testWordTransfusion :: Word
-testWordTransfusion = Word "transfusion" 3 "_^_" ["T", "R", "AE0", "N", "S", "F", "Y", "UW1", "ZH", "AH0", "N"]
+testWordTransfusion = Word "transfusion" 3 [D, U, D] ["T", "R", 
+                          "AE0", "N", "S", "F", "Y", "UW1", "ZH", "AH0", "N"]
 
 testLineFox :: Line
-testLineFox = Line ["fox"] 1 "^" ["F", "AA1", "K", "S"]
+testLineFox = Line ["fox"] 1 [U] ["F", "AA1", "K", "S"]
 
 testLineVision :: Line
-testLineVision = Line ["vision"] 2 "^_" ["V", "IH1", "ZH", "AH0", "N"]
+testLineVision = Line ["vision"] 2 [U, D] ["V", "IH1", "ZH", "AH0", "N"]
 
 testLineTransfusion = wordToLine testWordTransfusion
 testLinePox = wordToLine testWordPox
 
 testLineFoxPox :: Line
-testLineFoxPox = Line ["fox","pox"] 2 "^^" 
+testLineFoxPox = Line ["fox","pox"] 2 [U, U] 
                   ["F", "AA1", "K", "S", "P", "AA1", "K", "S"]
 
 testLineVisionTransfusion :: Line
-testLineVisionTransfusion = Line ["vision","transfusion"] 5 "^__^_" 
+testLineVisionTransfusion = Line ["vision","transfusion"] 5 [U, D, D, U, D] 
                               ["V", "IH1", "ZH", "AH0", "N", "T",
                                "R", "AE0", "N", "S", "F", "Y", "UW1", 
                                 "ZH", "AH0", "N"]
@@ -144,21 +147,20 @@ testSyllables = "Test syllables" ~: TestList [
   ]
 
 -- | Returns the pattern of stresses. For example, a word with a
--- stressed, then two unstressed symbols will return string "^__"
--- @todo consider replacing with list of bools, or new datatype
-stressPattern :: [Phoneme] -> String
-stressPattern []     = ""
+-- stressed, then two unstressed symbols will return [U, D, D] 
+stressPattern :: [Phoneme] -> [Stress] 
+stressPattern []     = [] 
 stressPattern (p:ps) = pat ++ stressPattern ps where
   pat = case lst of
-    '1' -> "^"
-    '2' -> "^"
-    '0' -> "_"
-    _   -> ""
+    '1' -> [U] 
+    '2' -> [U]
+    '0' -> [D]
+    _   -> [] 
   lst = if null p then '\0' else last p
 
 testStressPattern :: Test
 testStressPattern = "Test stressPattern" ~: TestList [
-  stressPattern ["A1", "A0", "AB", "A1"] ~?= "^_^"
+  stressPattern ["A1", "A0", "AB", "A1"] ~?= [U,D,U]
   ]
 
 -- | Use to retrieve the stressed phonemes in a word
