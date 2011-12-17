@@ -28,28 +28,38 @@ testLex = TestList [
     [TokWord testWordFox, TokWord testWordPox, TokNewline, TokWord testWordVision, TokWord testWordTransfusion, TokNewline] 
   ]
 
-type RhymeStats = ([Phoneme], String)
-
-type RhymeMap = Map String RhymeStats
+type RhymeMap = Map [Phoneme] String 
 
 newtype PoemParser a = P ([Token] -> [(a, [Token])])
-
-type SPP a = StateT a PoemParser a
 
 doParse :: PoemParser a -> [Token] -> [(a, [Token])]
 doParse (P p) pls = p pls
 
+lastPhonemes :: Int -> Word -> [Phoneme]
+lastPhonemes n (Word _ _ _ phs)  
+  | length phs <= n = phs
+  | otherwise       = drop ((length phs) - n) phs 
+
+testLastPhonemes :: Test
+testLastPhonemes = let testWords = [testWordFox, testWordTransfusion] in
+  "lastPhonemes" ~: 
+  TestList (zipWith (~?=) (map (lastPhonemes 3) testWords) 
+                          [["AA1", "K", "S"], ["ZH", "AH0", "N"]]) 
+
+last3Phonemes :: Word -> [Phoneme]
+last3Phonemes = lastPhonemes 3
 
 -- | If the first item in the input stream is the last word
 -- on a line, parses a rhyme map from that word.
 lastWord :: RhymeMap -> PoemParser RhymeMap
 lastWord m = P fun where
   fun ((TokWord w):TokNewline:vs) = [(m', vs)] where
-    vals = map fst $ Map.elems m
+    m' = if phons `Map.member` m
+         then m
+         else Map.insert phons nk m
+    phons = last3Phonemes w 
+    vals = Map.keys m
     nk = nextKey vals
-    m' = if any (phonemesMatch 3 (phonemes w)) vals 
-          then m
-          else Map.insert nk (phonemes w, nk) m
   fun _ = []
   nextKey ks = infi !! (length ks)
   infi = abcs ++ (concatMap (\x -> map (x ++) abcs) infi) where
@@ -60,7 +70,7 @@ testLastWord = "Test lastWord" ~: TestList [
   doParse (lastWord Map.empty) tokList ~?= [(map, [])]
   ] where
   tokList = [TokWord testWordFox, TokNewline]
-  map = Map.fromList [("a", (["F", "AA1", "K", "S"], "a"))]
+  map = Map.fromList [(["F", "AA1", "K", "S"], "a")]
  
 -- | Returns true if the last n phonemes in the passed lists match
 phonemesMatch :: Int -> [Phoneme] -> [Phoneme] -> Bool
@@ -106,15 +116,12 @@ testRhymes = "Test Rhymes" ~: TestList [
 -- | Takes a RhymeMap and gives a parser which consumes input
 -- that rhymes with something in that map.
 rhymeIn :: RhymeMap -> PoemParser RhymeMap 
-rhymeIn map = P fun where
-  -- @todo This may need to be modified so that the map is agumented.
-  fun ((TokWord word):ts) = if null matches then [] 
-                            else [(map, ts)] where 
-    matches = filter (filt word) $ Map.elems map 
+rhymeIn m = P fun where
+  fun ((TokWord w):ts) = if phons `Map.member` m
+                            then [(m, ts)] 
+                            else [] where 
+    phons = last3Phonemes w
   fun _                   = []
-
-  filt word (phs, _) = rhymesWith word phs
-  rhymesWith word = phonemesMatch 3 (phonemes word)
 
 testRhymeIn :: Test
 testRhymeIn = "Test rhymeIn" ~: TestList [
@@ -124,9 +131,7 @@ testRhymeIn = "Test rhymeIn" ~: TestList [
   r = rhymeIn rhymeMap
   fox = TokWord testWordFox
   vision = TokWord testWordVision
-  rhymeMap = Map.fromList [
-    ("a", (["AA1", "K", "S"], "a"))
-    ]
+  rhymeMap = Map.fromList [(["AA1", "K", "S"], "a")]
 
 nSyllables :: Int -> PoemParser RhymeMap
 nSyllables n = P (_syl n) where
@@ -222,6 +227,7 @@ testHaiku = "Test haiku" ~: TestList [
 test :: IO ()
 test = do
   runTestTT (TestList [
+    testLastPhonemes, 
     testPhonemesMatch,
     testAnyWord,
     testLastWord,
