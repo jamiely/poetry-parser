@@ -10,8 +10,6 @@ import Data.Char (isAlpha)
 import Control.Monad.State
 
 data Token = TokLine Line
---    TokWord Word -- a word
---  | TokNewline -- a newline character
   deriving (Eq, Show)
 
 -- Lexes a string into a list of tokens
@@ -19,7 +17,7 @@ lex :: [PoemLine] -> [Token]
 lex = map (TokLine . wordsToLine)
 
 testLex :: Test
-testLex = TestList [
+testLex = "testLex" ~: TestList [
   PoemParser.lex [[testWordFox, testWordPox], [testWordVision, testWordTransfusion]] ~?= 
     [TokLine testLineFoxPox, TokLine testLineVisionTransfusion] 
   ]
@@ -31,6 +29,23 @@ newtype PoemParser a = P ([Token] -> [(a, [Token])])
 doParse :: PoemParser a -> [Token] -> [(a, [Token])]
 doParse (P p) pls = p pls
 
+
+-- | Returns the final vowel sound of a word followed by any 
+-- consonants that come after it.
+lastVowelPhonemes :: Line -> [Phoneme]
+lastVowelPhonemes (Line _ _ _ phs) = fun (reverse phs) [] where
+  fun (c:cs) phs' = if   isStressPhoneme c
+                    then c:phs'
+                    else fun cs (c:phs')
+  fun [] _ = []
+               
+testLastVowelPhonemes :: Test
+testLastVowelPhonemes = "lastVowelPhonemes" ~: TestList $
+  zipWith (~?=) (map lastVowelPhonemes [testLineFox, testLineTransfusion])
+                    [ ["AA1", "K", "S"], ["AH0", "N"]]
+
+-- | Returns the last n phonemes of a line, or all of them if 
+-- the total is less than n.
 lastPhonemes :: Int -> Line -> [Phoneme]
 lastPhonemes n (Line _ _ _ phs)  
   | length phs <= n = phs
@@ -53,7 +68,7 @@ lastWord m = P fun where
     m' = if phons `Map.member` m
          then m
          else Map.insert phons nk m
-    phons = lettersOnly $ last3Phonemes l 
+    phons = lettersOnly $ lastVowelPhonemes l 
     ks = Map.keys m
     nk = nextKey ks
   fun _ = []
@@ -99,10 +114,11 @@ p1 `chooseP` p2 = P (\cs -> let ls1 = doParse p1 cs in   --ls1 :: [(a,String)]
                             let ls2 = doParse p2 cs in   --ls2 :: [(a,String)]
                             ls1 ++ ls2)
 
--- | Use to determine if two lines rhyme. Compares the last 3 phonemes
+-- | Use to determine if two lines rhyme. Compares the last vowel phonemes
 -- of each line to determine if they rhyme.
 rhymes :: Line -> Line -> Bool
-rhymes (Line _ _ _ ph1) (Line _ _ _ ph2) = phonemesMatch 3 ph1 ph2
+rhymes l1 l2  = (fun l1) == (fun l2) where
+  fun = lettersOnly . lastVowelPhonemes 
 
 testRhymes :: Test
 testRhymes = "Test Rhymes" ~: TestList [
@@ -118,7 +134,7 @@ testRhymes = "Test Rhymes" ~: TestList [
 -- (b) the thing it rhymes with is tagged with the corresonding pattern
 rhymesPattern :: String -> RhymeMap -> PoemParser RhymeMap
 rhymesPattern pat m = P fun where
-  fun ((TokLine l):ts) = let phons = lettersOnly $ last3Phonemes l in
+  fun ((TokLine l):ts) = let phons = lettersOnly $ lastVowelPhonemes l in
     case phons `Map.lookup` m of
       Just s -> if   (pat == s)
                 then [(m, ts)]
@@ -140,7 +156,7 @@ rhymeIn m = P fun where
   fun ((TokLine l):ts) = if phons `Map.member` m
                             then [(m, ts)] 
                             else [] where 
-    phons = lettersOnly $ last3Phonemes l
+    phons = lettersOnly $ lastVowelPhonemes l
   fun _                   = []
 
 testRhymeIn :: Test
@@ -161,13 +177,13 @@ aba = do
   rhymesPattern "a" m'
 
 testAba :: Test
-testAba =  TestList $
+testAba = "ABA" ~: TestList $
   zipWith (~?=) (map (doParse aba) [goodPoem, badPoem])
                                     [[(m, [])], []] where
     goodPoem = poemize [[f],[v],[p]]
     badPoem  = poemize [[v],[f],[p]]
     poemize = map (TokLine . wordsToLine)
-    m = Map.fromList [(["AA", "K", "S"], "a"), (["ZH", "AH", "N"], "b")]
+    m = Map.fromList [(["AA", "K", "S"], "a"), (["AH", "N"], "b")]
     f = testWordFox
     v = testWordVision
     p = testWordPox
@@ -261,6 +277,7 @@ testHaiku = "Test haiku" ~: TestList [
 test :: IO ()
 test = do
   runTestTT (TestList [
+    testLastVowelPhonemes, 
     testLastPhonemes, 
     testPhonemesMatch,
     testLastWord,

@@ -2,6 +2,7 @@ module CMUPronouncingDictionary (
   Phoneme, Word(Word), Line(Line),  PoemLine, Dictionary,
   wordsToLine,
   loadWords,
+  isStressPhoneme,
   testWordTransfusion, testWordPox,
   testWordVision, testWordFox, 
   testLineFoxPox, testLineVisionTransfusion,
