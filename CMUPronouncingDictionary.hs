@@ -1,9 +1,12 @@
 module CMUPronouncingDictionary (
-  Phoneme, Word(Word), PoemLine, Dictionary,
+  Phoneme, Word(Word), Line(Line),  PoemLine, Dictionary,
+  wordsToLine,
   loadWords,
   testWordTransfusion, testWordPox,
-  testWordVision, testWordFox,
-  CMUPronouncingDictionary.dictTest,
+  testWordVision, testWordFox, 
+  testLineFoxPox, testLineVisionTransfusion,
+  testLineTransfusion, testLinePox,
+  testLineVision, testLineFox, CMUPronouncingDictionary.dictTest,
   syllables, phonemes
 ) where
 
@@ -20,9 +23,36 @@ data Word =
     Word String Int String [Phoneme] -- actual word, syllables, stress, phonemes
     deriving (Eq, Show)
 
+data Line = Line {
+                  lwords :: [String]
+                 ,lsyllables :: Int
+                 ,lstress ::  String
+                 ,lphonemes :: [Phoneme]} 
+    deriving (Eq, Show)
+
+
 type PoemLine = [Word]
 
 type Dictionary = Map String Word
+
+-- | Converts a list of Words into a Line containing those words.
+wordsToLine :: [Word] -> Line
+wordsToLine ws = Line words totalSyllables totalStress allPhons where
+  words = map wordOnly ws where
+    wordOnly (Word w _ _ _ ) = w
+  totalSyllables = foldr (\w n -> (syllables w) + n) 0 ws
+  totalStress = foldr(\w sts -> ((stressPattern (phonemes w)) ++ sts)) "" ws
+  allPhons = concatMap phonemes ws
+
+-- | Converts a Word into a Line containing only that word
+wordToLine :: Word -> Line
+wordToLine (Word w n s ph) = Line [w] n s ph
+
+testWordToLine :: Test
+testWordToLine = "wordToLine" ~:
+  TestList $ zipWith (~?=) (map wordToLine ws) ls where
+    ws = [testWordFox, testWordVision]
+    ls = [testLineFox, testLineVision]
 
 -- | Generates a dictionary based on the passed words
 loadWords :: String -> [String] -> Dictionary
@@ -69,6 +99,25 @@ testWordVision = Word "vision" 2 "^_" ["V", "IH1", "ZH", "AH0", "N"]
 
 testWordTransfusion :: Word
 testWordTransfusion = Word "transfusion" 3 "_^_" ["T", "R", "AE0", "N", "S", "F", "Y", "UW1", "ZH", "AH0", "N"]
+
+testLineFox :: Line
+testLineFox = Line ["fox"] 1 "^" ["F", "AA1", "K", "S"]
+
+testLineVision :: Line
+testLineVision = Line ["vision"] 2 "^_" ["V", "IH1", "ZH", "AH0", "N"]
+
+testLineTransfusion = wordToLine testWordTransfusion
+testLinePox = wordToLine testWordPox
+
+testLineFoxPox :: Line
+testLineFoxPox = Line ["fox","pox"] 2 "^^" 
+                  ["F", "AA1", "K", "S", "P", "AA1", "K", "S"]
+
+testLineVisionTransfusion :: Line
+testLineVisionTransfusion = Line ["vision","transfusion"] 5 "^__^_" 
+                              ["V", "IH1", "ZH", "AH0", "N", "T",
+                               "R", "AE0", "N", "S", "F", "Y", "UW1", 
+                                "ZH", "AH0", "N"]
 
 testCorpus :: String
 testCorpus = "FOX  F AA1 K S"
@@ -134,7 +183,8 @@ testIsStressPhoneme = "Test isStressPhoneme" ~: TestList [
 
 dictTest :: IO ()
 dictTest = do
-  runTestTT ( TestList [
+  runTestTT (TestList [
+    testWordToLine, 
     testSyllables,
     testStresses,
     testStressPattern,
