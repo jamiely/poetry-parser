@@ -1,4 +1,5 @@
 module PoemParser(Token (TokLine), PoemParser.lex, haiku, aba, aabba,
+  iambicPentameter,
  PoemParser, RhymeMap, doParse) where
 
 import Test.HUnit
@@ -188,6 +189,27 @@ testRhymeIn = "Test rhymeIn" ~: TestList [
   vision = TokLine testLineVision
   rhymeMap = Map.fromList [(["AA", "K", "S"], "a")]
 
+iambicPentameter :: PoemParser RhymeMap
+iambicPentameter = pair sp sp where
+  sp = stressLine [D,U, D,U, D,U, D,U, D,U]
+
+-- | Takes a stress pattern and gives a parser for lines of 
+-- that pattern.
+stressLine :: [Stress] -> PoemParser RhymeMap
+stressLine sts = P fun where
+  fun [] = []
+  fun ((TokLine (Line _ _ sts' _)):ls) = if sts == sts'
+                                 then [(Map.empty, ls)]
+                                 else [] 
+
+testStressLine :: Test
+testStressLine = "stressLine" ~: TestList $
+  zipWith (~?=) list [[(Map.empty, [])], []] where
+    list = [doParse (stressLine [U]) [TokLine testLineFox],
+            doParse (stressLine [D]) [TokLine testLineFox] ]
+
+
+
 -- | Takes a string representing a rhyme scheme and a 
 -- RhymeMap and outputs a parser for poems of that scheme.
 rhymeScheme :: String -> RhymeMap -> PoemParser RhymeMap
@@ -265,11 +287,12 @@ testMonad = "Test Monad PoemParser" ~: TestList [
   ns2 = nSyllables 2
   ns1 = nSyllables 1
   tokList = map TokLine [testLineVision, testLineFox]
-  pair :: PoemParser a -> PoemParser b -> PoemParser RhymeMap
-  pair a b = do
-    x <- a
-    y <- b
-    return Map.empty
+
+pair :: PoemParser a -> PoemParser b -> PoemParser RhymeMap
+pair a b = do
+  x <- a
+  y <- b
+  return Map.empty
 
 -- | Makes a parser out of a seed and two functions
 -- needing seeds and producing parsers. The resulting parser
@@ -315,10 +338,12 @@ test = do
     testLastVowelPhonemes, 
     testLastPhonemes, 
     testPhonemesMatch,
+    testAnyLine,
     testLastWord,
     testRhymes,
     testRhymesPattern,
     testRhymeIn,
+    testStressLine,  
     testNSyllables,
     testMonad,
     testHaiku,

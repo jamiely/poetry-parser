@@ -1,5 +1,5 @@
 module CMUPronouncingDictionary (
-  Phoneme, Word(Word), Line(Line),  PoemLine, Dictionary,
+  Phoneme, Word(Word), Line(Line), Stress(U,E,D), PoemLine, Dictionary,
   wordsToLine,
   loadWords,
   isStressPhoneme,
@@ -33,8 +33,18 @@ data Line = Line {
 
 type PoemLine = [Word]
 
-data Stress = U | D
-    deriving (Eq, Show)
+data Stress = U | E | D
+    deriving (Show)
+
+instance Eq Stress where
+  U == U = True
+  D == D = True
+  U == E = True
+  E == U = True
+  E == D = True
+  D == E = True
+  U == D = False
+  D == U = False
 
 type Dictionary = Map String Word
 
@@ -152,8 +162,8 @@ stressPattern :: [Phoneme] -> [Stress]
 stressPattern []     = [] 
 stressPattern (p:ps) = pat ++ stressPattern ps where
   pat = case lst of
-    '1' -> [U] 
-    '2' -> [U]
+    '2' -> [U] 
+    '1' -> [E]
     '0' -> [D]
     _   -> [] 
   lst = if null p then '\0' else last p
