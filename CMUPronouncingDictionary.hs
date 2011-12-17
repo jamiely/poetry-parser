@@ -104,7 +104,7 @@ stressPattern (p:ps) = pat ++ stressPattern ps where
     '2' -> "^"
     '0' -> "_"
     _   -> ""
-  lst = if null pat then '\0' else last pat
+  lst = if null p then '\0' else last p
 
 testStressPattern :: Test
 testStressPattern = "Test stressPattern" ~: TestList [
