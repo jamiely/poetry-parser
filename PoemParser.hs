@@ -43,24 +43,17 @@ doParse (P p) pls = p pls
 -- | If the first item in the input stream is the last word
 -- on a line, parses a rhyme map from that word.
 lastWord :: RhymeMap -> PoemParser RhymeMap
-lastWord mp = P fun where
-  fun ((TokWord w):TokNewline:vs) = [(mp', vs)] where
-    -- the rhyming scheme should be assigned using a previous mp,
-    -- using keys that don't exist
-    keyz = map fst $ Map.elems mp
-    nk = nextKey keyz
-    mp' = if any (phonemesMatch 3 (phonemes w)) keyz 
-           then mp
-           else Map.insert nk (phonemes w, nk) mp
+lastWord m = P fun where
+  fun ((TokWord w):TokNewline:vs) = [(m', vs)] where
+    vals = map fst $ Map.elems m
+    nk = nextKey vals
+    m' = if any (phonemesMatch 3 (phonemes w)) vals 
+          then m
+          else Map.insert nk (phonemes w, nk) m
   fun _ = []
-   -- todo: runtime error
-  nextKey ks = head $ drop (length ks) (toString abcs)
-  
-  toString :: String -> [String]
-  toString = foldr  (\c cs -> [c] : cs) []
-  
-  --Hoping for not more than 26 phonemes now...
-  abcs = "abcdefghijklmnopqrstuvwxyz"
+  nextKey ks = infi !! (length ks)
+  infi = abcs ++ (concatMap (\x -> map (x ++) abcs) infi) where
+    abcs = map (:[]) ['a' .. 'z'] 
 
 testLastWord :: Test
 testLastWord = "Test lastWord" ~: TestList [
