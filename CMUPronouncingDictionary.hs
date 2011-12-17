@@ -48,7 +48,7 @@ dictLineToWord :: String -> Word
 dictLineToWord line = Word strWord syllableCount stress phonemes where
   (strWord, phonemes) = case (words line) of 
     [] -> ("", [])
-    (x:xs) -> (x, xs)
+    (x:xs) -> (map toLower x, xs)
   stress = stressPattern phonemes
   stressPhonemes = filter isStressPhoneme phonemes
   syllableCount = length stressPhonemes 
