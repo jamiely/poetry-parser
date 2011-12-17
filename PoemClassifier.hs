@@ -41,7 +41,9 @@ description toks (pp, str) = case doParse pp toks of
   []  -> Nothing
 
 supportedParsers :: [(PoemParser RhymeMap, String)]
-supportedParsers = [(haiku, "haiku"), (aba, "Rhyming poem: aba")]
+supportedParsers = [(haiku, "haiku"), 
+                    (aba, "Rhyming poem: aba"),
+                    (aabba, "Rhyming poem:: aabba") ]
 
 test :: IO ()
 test = do

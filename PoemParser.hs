@@ -1,4 +1,4 @@
-module PoemParser(Token (TokLine), PoemParser.lex, haiku, aba,
+module PoemParser(Token (TokLine), PoemParser.lex, haiku, aba, aabba,
  PoemParser, RhymeMap, doParse) where
 
 import Test.HUnit
@@ -59,6 +59,25 @@ testLastPhonemes = let testWords = [testLineFoxPox, testLineVisionTransfusion] i
 
 last3Phonemes :: Line -> [Phoneme]
 last3Phonemes = lastPhonemes 3
+
+-- | If the first item in the input stream is the last word
+-- on a line, parses a rhyme map from that word.
+thisRhyme :: String -> RhymeMap -> PoemParser RhymeMap
+thisRhyme str m = P fun where
+  fun ((TokLine l):ls) = let phons = lettersOnly $ lastVowelPhonemes l in 
+    case (phons `Map.lookup` m) of
+      Just str' -> if str == str' 
+                   then [(m, ls)] 
+                   else []
+      Nothing -> if str == nk 
+                 then [(Map.insert phons nk m, ls)]
+                 else []  
+  fun _ = []  
+  ks = Map.keys m
+  nk = nextKey ks
+  nextKey ks' = infi !! (length ks')
+  infi = abcs ++ (concatMap (\x -> map (x ++) abcs) infi) where
+    abcs = map (:[]) ['a' .. 'z'] 
 
 -- | If the first item in the input stream is the last word
 -- on a line, parses a rhyme map from that word.
@@ -169,12 +188,19 @@ testRhymeIn = "Test rhymeIn" ~: TestList [
   vision = TokLine testLineVision
   rhymeMap = Map.fromList [(["AA", "K", "S"], "a")]
 
+-- | Takes a string representing a rhyme scheme and a 
+-- RhymeMap and outputs a parser for poems of that scheme.
+rhymeScheme :: String -> RhymeMap -> PoemParser RhymeMap
+rhymeScheme [] m = P (\toks -> [(m, toks)])
+rhymeScheme (c:cs) m = pairSeed m (thisRhyme [c]) (rhymeScheme cs)
+
 -- | Parses a 3-line poem with an aba rhyme scheme
 aba :: PoemParser RhymeMap
-aba = do
-  m <- lastWord Map.empty
-  m' <- lastWord m
-  rhymesPattern "a" m'
+aba = rhymeScheme "aba" Map.empty 
+
+-- | Parses a 5-line poem with an aabba rhyme scheme
+aabba :: PoemParser RhymeMap
+aabba = rhymeScheme "aabba" Map.empty 
 
 testAba :: Test
 testAba = "ABA" ~: TestList $
@@ -244,6 +270,15 @@ testMonad = "Test Monad PoemParser" ~: TestList [
     x <- a
     y <- b
     return Map.empty
+
+-- | Makes a parser out of a seed and two functions
+-- needing seeds and producing parsers. The resulting parser
+-- will apply both in succession.
+pairSeed :: a -> (a -> PoemParser a) -> (a -> PoemParser a) -> PoemParser a
+pairSeed seed pf1 pf2 = do
+  seed'  <- (pf1 seed)
+  seed'' <- (pf2 seed')
+  return seed''
 
 -- | Parses a Haiku
 haiku :: PoemParser RhymeMap
