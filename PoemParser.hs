@@ -57,7 +57,7 @@ lastWord m = P fun where
     m' = if phons `Map.member` m
          then m
          else Map.insert phons nk m
-    phons = last3Phonemes w 
+    phons = lettersOnly $ last3Phonemes w 
     vals = Map.keys m
     nk = nextKey vals
   fun _ = []
@@ -76,7 +76,9 @@ testLastWord = "Test lastWord" ~: TestList [
 phonemesMatch :: Int -> [Phoneme] -> [Phoneme] -> Bool
 phonemesMatch n a b = lettersOnly (part a) == lettersOnly (part b) where
   part = (take n) . reverse
-  lettersOnly = map (filter isAlpha)
+
+lettersOnly :: [String] -> [String]
+lettersOnly = map (filter isAlpha)
 
 testPhonemesMatch :: Test
 testPhonemesMatch = "Test phonemesMatch" ~: TestList [
@@ -120,7 +122,7 @@ rhymeIn m = P fun where
   fun ((TokWord w):ts) = if phons `Map.member` m
                             then [(m, ts)] 
                             else [] where 
-    phons = last3Phonemes w
+    phons = lettersOnly $ last3Phonemes w
   fun _                   = []
 
 testRhymeIn :: Test
