@@ -17,11 +17,6 @@ data Token = TokLine Line
 -- Lexes a string into a list of tokens
 lex :: [PoemLine] -> [Token]
 lex = map (TokLine . wordsToLine)
---lex = concatMap (fun1 . fun2) where
---  fun1 = \l -> l ++ [TokNewline]
---  fun2 = (foldr foldLine [])
---  foldLine :: Word -> [Token] -> [Token]
---  foldLine w toks = (TokWord w):toks
 
 testLex :: Test
 testLex = TestList [
@@ -118,6 +113,26 @@ testRhymes = "Test Rhymes" ~: TestList [
     (tfsn, vsn) = (testLineTransfusion, testLineVision) 
     (fx, px) = (testLineFox, testLinePox)
 
+-- | Takes a string and a RhymeMap and gives a parser which
+-- (a) rhymes with something in the map
+-- (b) the thing it rhymes with is tagged with the corresonding pattern
+rhymesPattern :: String -> RhymeMap -> PoemParser RhymeMap
+rhymesPattern pat m = P fun where
+  fun ((TokLine l):ts) = let phons = lettersOnly $ last3Phonemes l in
+    case phons `Map.lookup` m of
+      Just s -> if   (pat == s)
+                then [(m, ts)]
+                else []
+      Nothing -> []
+  fun _ = []
+
+testRhymesPattern :: Test
+testRhymesPattern = TestList $ 
+  zipWith (~?=) (map (doParse par . (:[]) . TokLine ) [testLinePox, testLineVision]) 
+                  [[(m, [])], []] where
+    par = rhymesPattern "a" m
+    m = fst . head $ doParse (lastWord Map.empty) $ [TokLine testLineFox] 
+
 -- | Takes a RhymeMap and gives a parser which consumes input
 -- that rhymes with something in that map.
 rhymeIn :: RhymeMap -> PoemParser RhymeMap 
@@ -137,6 +152,26 @@ testRhymeIn = "Test rhymeIn" ~: TestList [
   fox = TokLine testLineFox
   vision = TokLine testLineVision
   rhymeMap = Map.fromList [(["AA", "K", "S"], "a")]
+
+-- | Parses a 3-line poem with an aba rhyme scheme
+aba :: PoemParser RhymeMap
+aba = do
+  m <- lastWord Map.empty
+  m' <- lastWord m
+  rhymesPattern "a" m'
+
+testAba :: Test
+testAba =  TestList $
+  zipWith (~?=) (map (doParse aba) [goodPoem, badPoem])
+                                    [[(m, [])], []] where
+    goodPoem = poemize [[f],[v],[p]]
+    badPoem  = poemize [[v],[f],[p]]
+    poemize = map (TokLine . wordsToLine)
+    m = Map.fromList [(["AA", "K", "S"], "a"), (["ZH", "AH", "N"], "b")]
+    f = testWordFox
+    v = testWordVision
+    p = testWordPox
+
 
 nSyllables :: Int -> PoemParser RhymeMap
 nSyllables n = P (_syl n) where
@@ -230,10 +265,12 @@ test = do
     testPhonemesMatch,
     testLastWord,
     testRhymes,
+    testRhymesPattern,
     testRhymeIn,
     testNSyllables,
     testMonad,
     testHaiku,
+    testAba,
     testLex
     ])
   return ()
