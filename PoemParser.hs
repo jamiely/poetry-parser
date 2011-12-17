@@ -1,4 +1,4 @@
-module PoemParser(Token (TokLine), PoemParser.lex, haiku,
+module PoemParser(Token (TokLine), PoemParser.lex, haiku, aba,
  PoemParser, RhymeMap, doParse) where
 
 import Test.HUnit
