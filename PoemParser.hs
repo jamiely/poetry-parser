@@ -1,5 +1,5 @@
 module PoemParser(Token (TokLine), PoemParser.lex, haiku, aba, aabba,
-  iambicPentameter, 
+  iambicPentameter, sonnetRhyme, shakespeareanSonnet, 
  PoemParser, RhymeMap, doParse) where
 
 import Test.HUnit
@@ -200,6 +200,12 @@ whileParse p = P fun where
     [(_,ls')] -> fun ls'
     _ -> [] 
 
+-- | Tries the first parser. If that fails, tries the second.
+(<|>) :: PoemParser a -> PoemParser a -> PoemParser a
+p1 <|> p2 = P (\ts -> case doParse p1 ts of
+                        []  -> doParse p2 ts 
+                        win -> win)
+
 -- | Takes two parsers and applies them to the same input.
 -- Only succeeds if both succeed. Only the output of the second 
 -- parser is kept.
@@ -213,9 +219,24 @@ andParse p1 p2 = P fun where
 rhymingHaiku :: PoemParser RhymeMap
 rhymingHaiku = andParse haiku aba 
 
+sonnetRhyme :: PoemParser RhymeMap
+sonnetRhyme = rhymeScheme "ababcdcdefefgg" Map.empty
+
+shakespeareanSonnet :: PoemParser RhymeMap
+shakespeareanSonnet = iambicPentameter `andParse`  
+                       (rhymeScheme "ababcdcdefefgg" Map.empty)
+
 iambicPentameter :: PoemParser RhymeMap
-iambicPentameter = whileParse sp where 
-  sp = stressLine [D,U, D,U, D,U, D,U, D,U]
+iambicPentameter = whileParse sp where
+  -- | Allow for inversion of first or fourth foot, and feminine ending. 
+  sp = stressLine [D,U, D,U, D,U, D,U, D,U] <|>
+       stressLine [D,U, D,U, D,U, D,U, D,U] <|>
+       stressLine [U,D, D,U, D,U, D,U, D,U] <|>
+       stressLine [D,U, D,U, D,U, U,D, D,U] <|>
+       stressLine [U,D, D,U, D,U, U,D, D,U,D] <|>
+       stressLine [U,D, D,U, D,U, D,U, D,U,D] <|>
+       stressLine [D,U, D,U, D,U, U,D, D,U,D] <|>
+       stressLine [U,D, D,U, D,U, U,D, D,U,D] 
 
 -- | Takes a stress pattern and gives a parser for lines of 
 -- that pattern.

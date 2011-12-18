@@ -44,7 +44,9 @@ supportedParsers :: [(PoemParser RhymeMap, String)]
 supportedParsers = [(haiku, "haiku"), 
                     (aba, "Rhyming poem: aba"),
                     (aabba, "Rhyming poem:: aabba"),
-                    (iambicPentameter, "Iambic Pentameter") ]
+                    (iambicPentameter, "Iambic Pentameter"),
+                    (sonnetRhyme, "ababcdcdefefgg rhyme scheme"),
+                    (shakespeareanSonnet, "Shakespearean Sonnet (!!)") ]
 
 test :: IO ()
 test = do
