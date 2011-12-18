@@ -21,10 +21,6 @@ wordList str = map upper $ sort $ filter (/= "") $ nub $ splitOneOf " \n" str
 
 upper :: String -> String
 upper = map toUpper
-testSmallPoem :: String
-testSmallPoem = "something something fox\n" ++
-  "word here pox" 
-
 
 -- | Given a dictionary filename, and list of words, excerpts of the dictionary
 -- will be returned corresponding to the list of words

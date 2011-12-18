@@ -1,5 +1,5 @@
 module PoemParser(Token (TokLine), PoemParser.lex, haiku, aba, aabba,
-  iambicPentameter,
+  iambicPentameter, 
  PoemParser, RhymeMap, doParse) where
 
 import Test.HUnit
@@ -189,8 +189,32 @@ testRhymeIn = "Test rhymeIn" ~: TestList [
   vision = TokLine testLineVision
   rhymeMap = Map.fromList [(["AA", "K", "S"], "a")]
 
+-- | Takes a parser and applies it till it can't be
+-- applied no more. If all of the input has been consumed,
+-- succeed.
+whileParse :: PoemParser a -> PoemParser a
+whileParse p = P fun where
+  fun [] = []
+  fun ls = case doParse p ls of
+    s@[(_,[])] -> s 
+    [(_,ls')] -> fun ls'
+    _ -> [] 
+
+-- | Takes two parsers and applies them to the same input.
+-- Only succeeds if both succeed. Only the output of the second 
+-- parser is kept.
+andParse :: PoemParser a -> PoemParser b -> PoemParser b
+andParse p1 p2 = P fun where
+  fun [] = []
+  fun ls = case doParse p1 ls of
+    [_] -> doParse p2 ls 
+    _         -> []
+
+rhymingHaiku :: PoemParser RhymeMap
+rhymingHaiku = andParse haiku aba 
+
 iambicPentameter :: PoemParser RhymeMap
-iambicPentameter = pair sp sp where
+iambicPentameter = whileParse sp where 
   sp = stressLine [D,U, D,U, D,U, D,U, D,U]
 
 -- | Takes a stress pattern and gives a parser for lines of 
