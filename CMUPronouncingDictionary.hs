@@ -11,7 +11,7 @@ module CMUPronouncingDictionary (
   syllables, phonemes
 ) where
 
-import Data.Char(toLower,toUpper)
+import Data.Char(toLower,toUpper,isAlpha)
 import Data.List(isPrefixOf, isSuffixOf)
 import Data.Map(Map)
 import qualified Data.Map as Map
@@ -75,7 +75,7 @@ loadWords strDict strWords = Map.fromList wordList where
   -- | Returns "" if the word is not found
   findWordLine w = if null ws then "" else head ws where
     ws = findWordLines w
-  findWordLines w = filter (isPrefixOf ((map toUpper w)++" ")) dictLines
+  findWordLines w = filter (isPrefixOf ((filter isAlpha (map toUpper w))++" ")) dictLines
   wordList = map wordTuple relevantDictionaryLines
   wordTuple line = (strWord word, word) where
     word = dictLineToWord line

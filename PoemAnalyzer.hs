@@ -3,7 +3,7 @@ module PoemAnalyzer(getWords, justWords) where
 import CMUPronouncingDictionary
 import Test.HUnit
 import Data.Map (Map)
-import Data.Char (toLower)
+import Data.Char (toLower, isAlpha)
 import qualified Data.Map as Map
 import Data.Maybe
 
@@ -39,7 +39,8 @@ testJustWords = "Test justWords" ~: TestList [
 
 -- | Returns statistics about a word given the word
 getWord :: Dictionary -> String -> Maybe Word
-getWord dict str = Map.lookup (map toLower str) dict
+getWord dict str = Map.lookup str' dict where
+  str' = filter isAlpha $ map toLower str
 
 testGetWord :: Test
 testGetWord = "Test getWord" ~: TestList [
