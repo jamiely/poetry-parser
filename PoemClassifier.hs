@@ -26,7 +26,6 @@ testClassify = "Test classify" ~: TestList [
 
 -- | Returns a description of the poem
 analyze :: [PoemLine] -> String
--- Tokenize the words, and parse using one of the available parsers
 analyze poem = if null result then "unsupported form" else result where 
   result = unwords $ catMaybes $ map tryParser supportedParsers 
   tryParser = description toks 
@@ -39,8 +38,8 @@ testAnalyze = "Test analyze" ~: TestList [
 
 description :: [Token] -> (PoemParser RhymeMap, String) -> Maybe String
 description toks (pp, str) = case doParse pp toks of
-  [_] -> Just str 
-  []  -> Nothing
+  [(_,[])] -> Just str --only succeed if the parser consumes the whoel poem
+  _ -> Nothing 
 
 supportedParsers :: [(PoemParser RhymeMap, String)]
 supportedParsers = [(haiku, "Haiku"), 
