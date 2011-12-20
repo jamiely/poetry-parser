@@ -7,7 +7,7 @@ module CMUPronouncingDictionary (
   testWordVision, testWordFox, 
   testLineFoxPox, testLineVisionTransfusion,
   testLineTransfusion, testLinePox,
-  testLineVision, testLineFox, CMUPronouncingDictionary.dictTest,
+  testLineVision, testLineFox, CMUPronouncingDictionary.test,
   syllables, phonemes
 ) where
 
@@ -195,8 +195,8 @@ testIsStressPhoneme = "Test isStressPhoneme" ~: TestList [
   isStressPhoneme "VERYLONG1" ~?= True
   ]
 
-dictTest :: IO ()
-dictTest = do
+test :: IO ()
+test = do
   runTestTT (TestList [
     testWordToLine, 
     testSyllables,

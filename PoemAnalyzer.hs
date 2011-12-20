@@ -15,15 +15,12 @@ testGetWords :: Test
 testGetWords = "Test getWords" ~: TestList [
   "fox" ~: getWords ["fox"] testDictionary ~?= [[justFox]],
   "fox with breaks" ~: getWords ["fox", "\n", "fox", "fox"] testDictionary ~?= 
-    [[justFox], [justFox, justFox]]
+    [[justFox], [], [justFox], [justFox]]
   ] where
   justFox = Just testWordFox
 
 testDictionary :: Dictionary
-testDictionary = Map.fromList [
-  ("fox", testWordFox), 
-  ("pox", testWordPox)
-  ]
+testDictionary = Map.fromList [ ("fox", testWordFox), ("pox", testWordPox) ]
 
 -- | Removes all Nothing's from the list and collapses entries
 justWords :: [[Maybe Word]] -> [[Word]]
@@ -52,8 +49,8 @@ testWords :: [Word]
 testWords = [testWordFox, testWordPox]
 
 
-analyzeTest :: IO ()
-analyzeTest = do
+test :: IO ()
+test = do
   runTestTT (TestList [
     testGetWord,
     testJustWords,
