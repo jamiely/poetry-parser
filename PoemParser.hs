@@ -13,7 +13,17 @@ import Control.Monad.State
 data Token = TokLine Line --the fundamental unit of a poem shall be a line
   deriving (Eq, Show)
 
+--Original idea:
+--data Token =
+--    TokWord Word -- a word
+--  | TokNewline -- a newline character
+--  deriving (Eq, Show)
+
 type RhymeMap = Map [Phoneme] String 
+
+--Originally: 
+--type RhymeMap = Map String RhymeStats
+--type RhymeStats = ([Phoneme], String)
 
 newtype PoemParser a = P ([Token] -> [(a, [Token])])
 
@@ -64,11 +74,11 @@ lettersOnly = map (filter isAlpha)
 -- | Returns the final vowel sound of a word followed by any 
 -- consonants that come after it.
 lastVowelPhonemes :: Line -> [Phoneme]
-lastVowelPhonemes (Line _ _ _ phs) = fun (reverse phs) [] where
-  fun (c:cs) phs' = if   isStressPhoneme c
+lastVowelPhonemes (Line _ _ _ phs) = acc (reverse phs) [] where
+  acc (c:cs) phs' = if   isStressPhoneme c
                     then c:phs'
-                    else fun cs (c:phs')
-  fun [] _ = []
+                    else acc cs (c:phs')
+  acc [] _ = []
                
 testLastVowelPhonemes :: Test
 testLastVowelPhonemes = "lastVowelPhonemes" ~: TestList $
@@ -108,7 +118,7 @@ testLastVowelPhonemes = "lastVowelPhonemes" ~: TestList $
 --    (tfsn, vsn) = (testLineTransfusion, testLineVision) 
 --    (fx, px) = (testLineFox, testLinePox)
 
---  Fundamental parsers
+--  Fundamental parsers: syllables, rhyme, and meter
 
 -- | Creates a parser for a line with a given number of syllables
 nSyllables :: Int -> PoemParser RhymeMap
@@ -125,11 +135,12 @@ testNSyllables = "Test nSyllables" ~: TestList [
   doParse (nSyllables 2) [TokLine (testLineTransfusion)] ~?= []
   ]
 
--- | If the first item in the input stream is the last word
--- on a line, parses a rhyme map from that word.
+-- | Makes a parser that succeeds when the given line
+-- receives the given string as its key in the map, 
+-- representing a piece of a rhyme scheme.
 thisRhyme :: String -> RhymeMap -> PoemParser RhymeMap
-thisRhyme str m = P fun where
-  fun ((TokLine l):ls) = let phons = lettersOnly $ lastVowelPhonemes l in 
+thisRhyme str m = P parse where
+  parse ((TokLine l):ls) = let phons = lettersOnly $ lastVowelPhonemes l in 
     case (phons `Map.lookup` m) of
       Just str' -> if str == str' 
                    then [(m, ls)] 
@@ -137,14 +148,14 @@ thisRhyme str m = P fun where
       Nothing -> if str == nk 
                  then [(Map.insert phons nk m, ls)]
                  else []  
-  fun _ = []  
+  parse _ = []  
   ks = Map.keys m
   nk = nextKey ks
   nextKey ks' = infi !! (length ks')
   infi = abcs ++ (concatMap (\x -> map (x ++) abcs) infi) where
     abcs = map (:[]) ['a' .. 'z'] 
 
--- functionality demonstrated by working testAba,
+-- functionality further demonstrated by working testAba,
 -- which depends on thisRhyme
 testThisRhyme :: Test
 testThisRhyme = "thisRhyme" ~: TestList [
@@ -156,9 +167,9 @@ testThisRhyme = "thisRhyme" ~: TestList [
 -- | Takes a stress pattern and gives a parser for lines of 
 -- that pattern.
 stressLine :: [Stress] -> PoemParser RhymeMap
-stressLine sts = P fun where
-  fun [] = []
-  fun ((TokLine (Line _ _ sts' _)):ls) = if sts == sts'
+stressLine sts = P parse where
+  parse [] = []
+  parse ((TokLine (Line _ _ sts' _)):ls) = if sts == sts'
                                  then [(Map.empty, ls)]
                                  else [] 
 
@@ -170,9 +181,9 @@ testStressLine = "stressLine" ~: TestList $
 
 -- | Parses any line 
 anyLine :: PoemParser RhymeMap
-anyLine = P fun where
-  fun ((TokLine _):ts) = [(Map.empty, ts)]
-  fun _                = []
+anyLine = P parse where
+  parse ((TokLine _):ts) = [(Map.empty, ts)]
+  parse _                = []
 
 testAnyLine :: Test
 testAnyLine = "Test anyLine" ~: TestList [
@@ -181,8 +192,9 @@ testAnyLine = "Test anyLine" ~: TestList [
   ] where
   tokList = [TokLine testLineVisionTransfusion, TokLine testLineFoxPox]
 
--- Functions over parsers
+-- Parser combinators 
 
+-- | Tries two parsers and combines their successes.
 chooseP :: PoemParser a -> PoemParser a -> PoemParser a
 p1 `chooseP` p2 = P (\cs -> let ls1 = doParse p1 cs in   --ls1 :: [(a,String)]
                             let ls2 = doParse p2 cs in   --ls2 :: [(a,String)]
@@ -198,32 +210,32 @@ p1 <|> p2 = P (\ts -> case doParse p1 ts of
 -- applied no more. If all of the input has been consumed,
 -- succeed.
 whileParse :: PoemParser a -> PoemParser a
-whileParse p = P fun where
-  fun [] = []
-  fun ls = case doParse p ls of
-    s@[(_,[])] -> s 
-    [(_,ls')] -> fun ls'
+whileParse p = P parse where
+  parse [] = []
+  parse ls = case doParse p ls of
+    s@[(_,[])] -> s --success, no more tokens 
+    [(_,ls')] -> parse ls' --keep going
     _ -> [] 
 
 -- | Takes two parsers and applies them to the same input.
 -- Only succeeds if both succeed. Only the output of the second 
 -- parser is kept.
-andParse :: PoemParser a -> PoemParser b -> PoemParser b
-andParse p1 p2 = P fun where
-  fun [] = []
-  fun ls = case doParse p1 ls of
+(<&>) :: PoemParser a -> PoemParser b -> PoemParser b
+p1 <&> p2 = P parse where
+  parse [] = []
+  parse ls = case doParse p1 ls of
     [_] -> doParse p2 ls 
     _         -> []
 
+-- | Does two parsers in succession, throwing away the result.
 pair :: PoemParser a -> PoemParser b -> PoemParser RhymeMap
 pair a b = do
   x <- a
   y <- b
   return Map.empty
 
--- | Makes a parser out of a seed and two functions
--- needing seeds and producing parsers. The resulting parser
--- will apply both in succession.
+-- Apply two parsers in succession, starting with a seed store
+-- and returning the final result.
 pairSeed :: a -> (a -> PoemParser a) -> (a -> PoemParser a) -> PoemParser a
 pairSeed seed pf1 pf2 = do
   seed'  <- (pf1 seed)
@@ -283,13 +295,12 @@ testAba = "ABA" ~: TestList $
     v = testWordVision
     p = testWordPox
 
--- | Parses a 5-line poem with an aabba rhyme scheme
 aabba :: PoemParser RhymeMap
 aabba = rhymeScheme "aabba" Map.empty 
 
 -- | Just for the heck of it
 rhymingHaiku :: PoemParser RhymeMap
-rhymingHaiku = haiku `andParse` aba 
+rhymingHaiku = haiku <&> aba 
 
 -- | The stress pattern of a limerick
 -- note: syllable requirement is implicit
@@ -302,7 +313,7 @@ limerickStress = do
                  stressLine [D,U, D,D,U, D,D,U] 
 
 limerick :: PoemParser RhymeMap
-limerick = limerickStress `andParse` aabba 
+limerick = limerickStress <&> aabba 
 
 sonnetRhyme :: PoemParser RhymeMap
 sonnetRhyme = rhymeScheme "ababcdcdefefgg" Map.empty
@@ -321,7 +332,7 @@ iambicPentameter = whileParse sp where
 
 -- | The creme de la creme 
 shakespeareanSonnet :: PoemParser RhymeMap
-shakespeareanSonnet = iambicPentameter `andParse`  
+shakespeareanSonnet = iambicPentameter <&>  
                        (rhymeScheme "ababcdcdefefgg" Map.empty)
 
 testTokenList1 :: [Token]

@@ -28,8 +28,8 @@ testClassify = "Test classify" ~: TestList [
 analyze :: [PoemLine] -> String
 -- Tokenize the words, and parse using one of the available parsers
 analyze poem = if null result then "unsupported form" else result where 
-  result = unwords $ catMaybes $ map fun supportedParsers 
-  fun = description toks 
+  result = unwords $ catMaybes $ map tryParser supportedParsers 
+  tryParser = description toks 
   toks = PoemParser.lex poem 
 
 testAnalyze :: Test

@@ -1,5 +1,8 @@
 {-# OPTIONS -Wall -fwarn-tabs -fno-warn-type-defaults -fno-warn-orphans -fno-warn-unused-do-bind #-}
 
+--Advanced Programming, final project
+--by Jamie Ly <jamiely>, Nicholas McAvoy <mcavoyna>
+
 module Main (main) where
 
 import System.IO
