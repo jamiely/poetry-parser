@@ -10,11 +10,12 @@ import Data.Char(toUpper, isAlpha)
 main :: IO ()
 main = do
   -- Read the poem in from STDIN
-  inh <- openFile "dictionary/cmudict.0.7a" ReadMode
+  inh <- openFile "extra/cmudict.0.7a" ReadMode
   putStrLn "Opened file"
   poem <- getContents
   loadDictionary poem inh (map (filter isAlpha) (wordList poem)) "" 
 
+-- | Splits the string into unique, upper-cased words
 wordList :: String -> [String]
 wordList str = map (map toUpper) $ sort $ nub $ concatMap words (lines str) 
 
@@ -34,6 +35,7 @@ loadDictionary poem inh wrds excerpt = do
         prefixes l = filter (\word -> isPrefixOf word l) wrds
         prefix l = head $ prefixes l
 
+-- | Classifies a poem using the passed dictionary string
 runClassifier :: String -> String -> IO ()
 runClassifier poem dict = do
   -- echo the poem and its type
