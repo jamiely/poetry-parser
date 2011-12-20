@@ -27,7 +27,7 @@ Run the following command:
 
 # Running main/Usage
 
-    ./Main < extra/poem1.txt
+    ./Main < extra/fox.rhyming
     ./Main < extra/arb.hku
 
 # Running Tests
