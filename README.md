@@ -66,10 +66,3 @@ In ghci:
   5. `PoemParser.hs` contains the parsing Monad which determines a poem
      by parsing lists of Words.
 
-# Dependencies
-
-This requires the split package. Running make will install the
-dependencies, or use the command below:
-
-    cabal install split
-

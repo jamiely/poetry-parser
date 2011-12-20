@@ -3,8 +3,6 @@ Main:
 #  warnings on OSX Lion. This has not been tested on other platforms.
 # no_compact_unwind specifically prevents a linker error that occurs on
 # Lion.
-	cabal update
-	cabal install split # not part of default install, provides Data.List.Split
 	ghc --make -optl"-Wl,-read_only_relocs,suppress,-no_compact_unwind" Main
 
 clean:

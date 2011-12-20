@@ -15,7 +15,6 @@ import Data.Char(toLower,toUpper,isAlpha)
 import Data.List(isPrefixOf, isSuffixOf)
 import Data.Map(Map)
 import qualified Data.Map as Map
-import Data.List.Split(splitOn)
 import Test.HUnit
 
 type Phoneme = String
