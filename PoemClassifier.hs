@@ -19,7 +19,9 @@ classify poem dictText = poemDescription where
 testClassify :: Test 
 testClassify = "Test classify" ~: TestList [
   -- fails right now
-  classify "something something fox\nsomething something pox" "SOMETHING  S AH1 M TH IH0 NG\nFOX  F AA1 K S\nPOX  P AA1 K S" ~?= "Rhyming poem aa"
+  classify "something something fox\nsomething something pox" 
+    "SOMETHING  S AH1 M TH IH0 NG\nFOX  F AA1 K S\nPOX  P AA1 K S" ~?= 
+    "Rhyming poem aa"
   ]
 
 -- | Returns a description of the poem

@@ -19,7 +19,8 @@ lex = map (TokLine . wordsToLine)
 
 testLex :: Test
 testLex = "testLex" ~: TestList [
-  PoemParser.lex [[testWordFox, testWordPox], [testWordVision, testWordTransfusion]] ~?= 
+  PoemParser.lex [[testWordFox, testWordPox], 
+      [testWordVision, testWordTransfusion]] ~?= 
     [TokLine testLineFoxPox, TokLine testLineVisionTransfusion] 
   ]
 
@@ -53,8 +54,8 @@ lastPhonemes n (Line _ _ _ phs)
   | otherwise       = drop ((length phs) - n) phs 
 
 testLastPhonemes :: Test
-testLastPhonemes = let testWords = [testLineFoxPox, testLineVisionTransfusion] in
-  "lastPhonemes" ~: 
+testLastPhonemes = let testWords = [testLineFoxPox, testLineVisionTransfusion] 
+  in "lastPhonemes" ~: 
   TestList (zipWith (~?=) (map (lastPhonemes 3) testWords) 
                           [["AA1", "K", "S"], ["ZH", "AH0", "N"]]) 
 
@@ -164,8 +165,8 @@ rhymesPattern pat m = P fun where
 
 testRhymesPattern :: Test
 testRhymesPattern = TestList $ 
-  zipWith (~?=) (map (doParse par . (:[]) . TokLine ) [testLinePox, testLineVision]) 
-                  [[(m, [])], []] where
+  zipWith (~?=) (map (doParse par . (:[]) . TokLine ) 
+                  [testLinePox, testLineVision]) [[(m, [])], []] where
     par = rhymesPattern "a" m
     m = fst . head $ doParse (lastWord Map.empty) $ [TokLine testLineFox] 
 
