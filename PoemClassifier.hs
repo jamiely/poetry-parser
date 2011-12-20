@@ -19,9 +19,9 @@ classify poem dictText = poemDescription where
 testClassify :: Test 
 testClassify = "Test classify" ~: TestList [
   -- fails right now
-  classify "something something fox\nsomething something pox" 
+  classify "something something fox\nsomething\nsomething something pox" 
     "SOMETHING  S AH1 M TH IH0 NG\nFOX  F AA1 K S\nPOX  P AA1 K S" ~?= 
-    "Rhyming poem aa"
+    "Rhyming poem: aba"
   ]
 
 -- | Returns a description of the poem
@@ -33,7 +33,7 @@ analyze poem = if null result then "unsupported form" else result where
 
 testAnalyze :: Test
 testAnalyze = "Test analyze" ~: TestList [
-  analyze [[testWordFox],[testWordPox]] ~?= "Rhyming poem: aa"
+  analyze [[testWordFox],[testWordVision],[testWordFox]] ~?= "Rhyming poem: aba"
   ]
 
 description :: [Token] -> (PoemParser RhymeMap, String) -> Maybe String

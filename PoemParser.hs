@@ -5,7 +5,7 @@ module PoemParser(Token (TokLine), PoemParser.lex, haiku, aba, aabba, limerick, 
 import Test.HUnit
 import PoemAnalyzer
 import CMUPronouncingDictionary
-import Data.Map (Map)
+import Data.Map (Map, fromList)
 import qualified Data.Map as Map
 import Data.Char (isAlpha)
 import Control.Monad.State
@@ -200,11 +200,29 @@ p1 `chooseP` p2 = P (\cs -> let ls1 = doParse p1 cs in   --ls1 :: [(a,String)]
                             let ls2 = doParse p2 cs in   --ls2 :: [(a,String)]
                             ls1 ++ ls2)
 
+testChooseP :: Test
+testChooseP = "chooseP" ~: TestList $
+  [ doParse (rs1 `chooseP` rs2) [TokLine testLineFox] ~?= 
+            [(fromList [(["AA","K","S"],"a")],[]), (fromList [],[])]] where
+    rs1 = rhymeScheme "a" Map.empty
+    rs2 = nSyllables 1 
+
 -- | Short circuit. Tries the first parser. If that fails, tries the second.
 (<|>) :: PoemParser a -> PoemParser a -> PoemParser a
 p1 <|> p2 = P (\ts -> case doParse p1 ts of
                         []  -> doParse p2 ts 
                         win -> win)
+
+testOrP :: Test
+testOrP = "orP" ~: TestList $
+  [ doParse (rsB <|> ns1) [TokLine testLineFox] ~?= 
+            [(fromList [],[])],
+    doParse (ns2 <|> rsA) [TokLine testLineFox] ~?= 
+            [(fromList [(["AA","K","S"],"a")],[])] ]where
+    rsA = rhymeScheme "a" Map.empty  --succeeds
+    rsB = rhymeScheme "b" Map.empty  --fails
+    ns1 = nSyllables 1               --succeeds
+    ns2 = nSyllables 2               --fails
 
 -- | Takes a parser and applies it till it can't be
 -- applied no more. If all of the input has been consumed,
@@ -217,6 +235,15 @@ whileParse p = P parse where
     [(_,ls')] -> parse ls' --keep going
     _ -> [] 
 
+testWhileParse :: Test
+testWhileParse = "whileParse" ~: TestList $
+  [doParse p l2 ~?= [(Map.empty, [])],
+   doParse p l3 ~?= [(Map.empty, [])] ] where
+  p = whileParse $ nSyllables 2
+  l = TokLine testLineFoxPox
+  l3 = [l, l, l]
+  l2 = take 2 l3 
+
 -- | Takes two parsers and applies them to the same input.
 -- Only succeeds if both succeed. Only the output of the second 
 -- parser is kept.
@@ -227,12 +254,27 @@ p1 <&> p2 = P parse where
     [_] -> doParse p2 ls 
     _         -> []
 
+testAndParse :: Test
+testAndParse = "andP" ~: TestList $
+  [ doParse (rsB <&> ns1) [TokLine testLineFox] ~?= [],
+    doParse (ns2 <&> rsA) [TokLine testLineFox] ~?= [] ]where
+    rsA = rhymeScheme "a" Map.empty --succeeds
+    rsB = rhymeScheme "b" Map.empty --fails
+    ns1 = nSyllables 1              --succeeds
+    ns2 = nSyllables 2              --fails
+
 -- | Does two parsers in succession, throwing away the result.
 pair :: PoemParser a -> PoemParser b -> PoemParser RhymeMap
 pair a b = do
   x <- a
   y <- b
   return Map.empty
+
+testPair :: Test
+testPair = "testPair" ~: TestList $
+  [doParse p l ~?= [(Map.empty, [])]] where
+  p = nSyllables 1 `pair` nSyllables 2 
+  l = map TokLine [testLineFox, testLineFoxPox]
 
 -- Apply two parsers in succession, starting with a seed store
 -- and returning the final result.
@@ -241,6 +283,12 @@ pairSeed seed pf1 pf2 = do
   seed'  <- (pf1 seed)
   seed'' <- (pf2 seed')
   return seed''
+
+testPairSeed :: Test
+testPairSeed = "testPairSeed" ~: TestList $
+  [doParse p l ~?= [(fromList [(["AA","K","S"],"a"),(["AH","N"],"b")],[])]] where
+  p = pairSeed Map.empty (thisRhyme "a") (thisRhyme "b")
+  l = map TokLine [testLineFoxPox, testLineVisionTransfusion]
 
 -- Poetic forms built out of the preceding
 
@@ -344,13 +392,19 @@ testTokenList1 = [
 test :: IO ()
 test = do
   runTestTT (TestList [
-    testLastVowelPhonemes, 
-    testAnyLine,
-    testStressLine,  
-    testNSyllables,
+    testLex,
     testMonad,
-    testHaiku,
+    testLastVowelPhonemes, 
+    testNSyllables,
     testAba,
-    testLex
+    testStressLine,  
+    testAnyLine,
+    testChooseP,
+    testOrP,
+    testWhileParse,
+    testAndParse,
+    testPair,
+    testPairSeed,
+    testHaiku
     ])
   return ()
