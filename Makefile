@@ -12,6 +12,5 @@ dictionary:
 	curl -OL https://cmusphinx.svn.sourceforge.net/svnroot/cmusphinx/trunk/cmudict/cmudict.0.7a
 	curl -OL https://cmusphinx.svn.sourceforge.net/svnroot/cmusphinx/trunk/cmudict/cmudict.0.7a.phones
 	curl -OL https://cmusphinx.svn.sourceforge.net/svnroot/cmusphinx/trunk/cmudict/cmudict.0.7a.symbols
-	mkdir extra
 	mv cmudict.0.7a* extra/
 
