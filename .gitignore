@@ -1,0 +1,6 @@
+*.hi
+*.o
+extra/cmudict*
+Main
+project.html
+project_files/*
