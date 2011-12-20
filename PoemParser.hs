@@ -1,4 +1,4 @@
-module PoemParser(Token (TokLine), PoemParser.lex, haiku, aba, aabba,
+module PoemParser(Token (TokLine), PoemParser.lex, haiku, aba, aabba, limerick, limerickStress,
   iambicPentameter, sonnetRhyme, shakespeareanSonnet, 
  PoemParser, RhymeMap, doParse) where
 
@@ -219,6 +219,17 @@ andParse p1 p2 = P fun where
 
 rhymingHaiku :: PoemParser RhymeMap
 rhymingHaiku = andParse haiku aba 
+
+limerickStress :: PoemParser RhymeMap
+limerickStress = do
+                 stressLine [D,U, D,D,U, D,D,U] 
+                 stressLine [D,U, D,D,U, D,D,U] 
+                 stressLine [D,U, D,D,U]        
+                 stressLine [D,U, D,D,U]        
+                 stressLine [D,U, D,D,U, D,D,U] 
+
+limerick :: PoemParser RhymeMap
+limerick = limerickStress `andParse` rhymeScheme "aabba" Map.empty
 
 sonnetRhyme :: PoemParser RhymeMap
 sonnetRhyme = rhymeScheme "ababcdcdefefgg" Map.empty

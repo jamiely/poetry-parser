@@ -37,13 +37,14 @@ data Stress = U | E | D
 
 instance Eq Stress where
   U == U = True
-  D == D = True
+  U == D = False
   U == E = True
+  D == D = True
+  D == E = True
+  D == U = False
   E == U = True
   E == D = True
-  D == E = True
-  U == D = False
-  D == U = False
+  E == E = True
 
 type Dictionary = Map String Word
 
