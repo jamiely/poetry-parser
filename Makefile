@@ -1,16 +1,15 @@
-Main:
-# -optl"-Wl,-read_only_relocs,suppress" is useful to prevent massive
-#  warnings on OSX Lion. This has not been tested on other platforms.
-# no_compact_unwind specifically prevents a linker error that occurs on
-# Lion.
-	ghc --make -optl"-Wl,-read_only_relocs,suppress,-no_compact_unwind" Main
+GHC ?= ghc
+GHC_FLAGS ?= -O2 -Wall -package HUnit
+
+Main: Main.hs CMUPronouncingDictionary.hs PoemAnalyzer.hs PoemParser.hs PoemClassifier.hs
+	$(GHC) --make $(GHC_FLAGS) Main.hs -o Main
+
+run: Main
+	./Main < extra/fox.rhyming
 
 clean:
-	rm Main *.hi *.o
+	rm -f Main *.hi *.o
 
+# Downloads CMU dict into the legacy location expected by the app.
 dictionary:
-	curl -OL https://cmusphinx.svn.sourceforge.net/svnroot/cmusphinx/trunk/cmudict/cmudict.0.7a
-	curl -OL https://cmusphinx.svn.sourceforge.net/svnroot/cmusphinx/trunk/cmudict/cmudict.0.7a.phones
-	curl -OL https://cmusphinx.svn.sourceforge.net/svnroot/cmusphinx/trunk/cmudict/cmudict.0.7a.symbols
-	mv cmudict.0.7a* extra/
-
+	curl -L https://raw.githubusercontent.com/cmusphinx/cmudict/master/cmudict.dict -o extra/cmudict.0.7a

@@ -1,5 +1,6 @@
 module PoemAnalyzer(getWords, justWords) where
 
+import Prelude hiding (Word)
 import CMUPronouncingDictionary
 import Test.HUnit
 import Data.Map (Map)

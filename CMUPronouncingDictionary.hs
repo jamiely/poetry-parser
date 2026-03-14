@@ -11,6 +11,7 @@ module CMUPronouncingDictionary (
   syllables, phonemes
 ) where
 
+import Prelude hiding (Word)
 import Data.Char(toLower,toUpper,isAlpha)
 import Data.List(isPrefixOf, isSuffixOf)
 import Data.Map(Map)

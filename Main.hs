@@ -6,17 +6,32 @@
 module Main (main) where
 
 import System.IO
+import System.Directory (doesFileExist)
+import System.Environment (lookupEnv)
 import PoemClassifier(classify)
 import Data.List
 import Data.Char(toUpper, isAlpha)
+import Control.Monad (filterM)
 
 main :: IO ()
 main = do
   -- Read the poem in from STDIN
-  inh <- openFile "extra/cmudict.0.7a" ReadMode
-  putStrLn "Opened file"
+  dictPath <- chooseDictionaryPath
+  putStrLn $ "Using dictionary: " ++ dictPath
+  inh <- openFile dictPath ReadMode
   poem <- getContents
-  loadDictionary poem inh (map (filter isAlpha) (wordList poem)) "" 
+  loadDictionary poem inh (map (filter isAlpha) (wordList poem)) ""
+
+-- | Finds a usable dictionary file.
+-- Priority: $CMUDICT_PATH, extra/cmudict.0.7a, dictionary-small.txt
+chooseDictionaryPath :: IO FilePath
+chooseDictionaryPath = do
+  envPath <- lookupEnv "CMUDICT_PATH"
+  let candidates = maybe id (:) envPath ["extra/cmudict.0.7a", "dictionary-small.txt"]
+  existing <- filterM doesFileExist candidates
+  case existing of
+    (p:_) -> return p
+    [] -> ioError (userError "No dictionary found. Set CMUDICT_PATH or add extra/cmudict.0.7a")
 
 -- | Splits the string into unique, upper-cased words
 wordList :: String -> [String]

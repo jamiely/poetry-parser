@@ -53,6 +53,15 @@ p1 `bindP` fp2 = P (\cs -> do
   doParse (fp2 a) cs'
   )
 
+instance Functor PoemParser where
+  fmap f p = P (\cs -> [ (f a, cs') | (a, cs') <- doParse p cs ])
+
+instance Applicative PoemParser where
+  pure = returnP
+  pf <*> pa = P (\cs -> [ (f a, cs'')
+                         | (f, cs') <- doParse pf cs
+                         , (a, cs'') <- doParse pa cs' ])
+
 instance Monad PoemParser where
   (>>=)  = bindP
   return = returnP
