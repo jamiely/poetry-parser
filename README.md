@@ -4,6 +4,19 @@ Jamie Ly (<jamiely>) and Nicholas McAvoy (<mcavoyna>)
 
 A legacy Haskell (2011) poetry parser/classifier, modernized to compile and run on current toolchains (GHC 9.x, Docker, 2026-era systems).
 
+## Quickstart (30 seconds)
+
+```bash
+docker build -t poetry-parser .
+printf 'fox\nvision\npox\n' | docker run --rm -i poetry-parser
+```
+
+Expected final line:
+
+```text
+Type: Rhyming poem: aba
+```
+
 ## What it does
 
 Given a poem on `stdin`, the app tries to classify it as one of:
